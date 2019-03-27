@@ -3,7 +3,7 @@ function main()
 %       by [Author names].
 %       Visit [GitHub address] to find contact details.
 %       This version: March 2019
-% 
+%
 %   This code demonstrates the use of the method in simulating a
 %   single flexible filament falling under gravity.
 %
@@ -14,9 +14,9 @@ function main()
 
 
 % Setup
-save_to_file = true;
+save_to_file = false;
 graphics = true;
-video = true;
+video = false;
 plot_step = 5;                % Plot every n timesteps
 save_step = 5;                % Save data to file every n timesteps
 
@@ -44,7 +44,7 @@ KBdivDL = KB/DL;
 unit_time = L*mu/weight_per_unit_length;   % 1 settling time, T
 
 filename = ['out-'  datestr(now,'yyyymmdd-HHMMSS') '-Nsw' num2str(N_sw) ...
-            '-Nw' num2str(N_w) '-B' num2str(B) '-RPY']; % used for data 
+            '-Nw' num2str(N_w) '-B' num2str(B) '-RPY']; % used for data
                                                         % file & video file
 
 % Set up segment position vectors.
@@ -72,28 +72,28 @@ SW_IND = reshape([1:Np],N_w,N_sw)';
 % Distances between segments
 DL_SW = zeros(N_sw, N_w - 1);
 for i_sw = 1:N_sw
-    DL_SW(i_sw,1) = DL; 
+    DL_SW(i_sw,1) = DL;
     for j = 2:N_w-1
         DL_SW(i_sw,j) = DL;
     end
-end   
+end
 
 % Which filament does segment belong to?
 % PtoS(n) returns the index of the filament that segment n belongs to.
 PtoS = zeros(Np, 1);
-PtoS = floor([0:Np-1]./N_w)+1;   
+PtoS = floor([0:Np-1]./N_w)+1;
 
 % Set up position and orientation of first segment in every filament
 % (We are happy with the default positon of [X,Y]=[0,0] and default
 %  orientation of THETA=0 but you can change this here.)
 
-% Having placed the first segment of each filament and set their 
+% Having placed the first segment of each filament and set their
 % orientation, use robot_arm to construct the position of the remaining
 % segments. For more, type 'help robot_arm'.
-[X,Y] = robot_arm(X,Y,THETA,SW_IND,DL);    
+[X,Y] = robot_arm(X,Y,THETA,SW_IND,DL);
 
 % Zero the velocities and angular velocities of the segments
-VX = zeros(Np,1);        % velocity of segment in x-direction 
+VX = zeros(Np,1);        % velocity of segment in x-direction
 VY = zeros(Np,1);        % velocity of segment in y-direction
 OMEGZ = zeros(Np,1);     % angular velocity of segment (in z-direction)
 
@@ -104,9 +104,9 @@ TAUZ = zeros(Np,1);      % torque on each segment (in z-direction)
 
 % Steric force setup.
 % For explanation, type 'help collision_barrier'.
-map = [1 1 1 1]';   
-list = [0:Np-1]';    
-head = Np;            
+map = [1 1 1 1]';
+list = [0:Np-1]';
+head = Np;
 Lx_collision = 1000;
 Ly_collision = 1000;
 
@@ -132,20 +132,20 @@ save_now = save_step - 1;
 % Segment size-related stuff
 drag_coeff = (6*pi*a);
 vis_tor_coeff = 8*pi*a^3;
-RAD = a*ones(Np,1);         % Segment size vector (a = filament thickness)   
+RAD = a*ones(Np,1);         % Segment size vector (a = filament thickness)
 
-% Newton step Delta X where at iteration k, X_(k+1) = X_k + Delta X 
+% Newton step Delta X where at iteration k, X_(k+1) = X_k + Delta X
 DeltaX = zeros(3*Np,1);
 
 % Time and iteration counts
-frame_time = zeros(TOTAL_STEPS,1);  
+frame_time = zeros(TOTAL_STEPS,1);
 iters = zeros(TOTAL_STEPS,1);       % Number of Broyden's iterations
 running_total_count = 0;            % For average number of Broyden's iters
 
 if video
     Filament_movie = VideoWriter(['output/' filename  '.avi']); % Name it.
     Filament_movie.FrameRate = 10;  % How many frames per second.
-    open(Filament_movie); 
+    open(Filament_movie);
     framecount = 1;
 end
 
@@ -155,8 +155,8 @@ J0invERROR_VECk = zeros(3*Np,1);   % J_0^{-1} f(X_k)      in Algorithm 2
 J0invERROR_VECk1 = zeros(3*Np,1);  % J_0^{-1} f(X_(k+1))  in Algorithm 2
 
 for nt = 1:TOTAL_STEPS
-    iter = 0;  
-    
+    iter = 0;
+
     p_broy = max_broyden_steps + 1;
     Cmat = zeros(3*Np,p_broy); % c and d vectors from Alg 2, Line 7. Their
     Dmat = zeros(3*Np,p_broy); % value at each iteration is stored.
@@ -177,14 +177,14 @@ for nt = 1:TOTAL_STEPS
     fprintf([ 'B=' num2str(B) '   ' ...
               'timestep: ' ...
               sprintf(['%' num2str(length_of_TOTAL_STEPS) '.f'],nt) ...
-              '/' num2str(TOTAL_STEPS) ' ' ])                                          
+              '/' num2str(TOTAL_STEPS) ' ' ])
     frame_start = tic;
 
     % X_S is x^(j+1)
     % X   is x^(j)
     % X_T is x^(j-1)
 
-    % Aim of this is to update X_S    
+    % Aim of this is to update X_S
     if(nt == 1)
         X_S = X;
         Y_S = Y;
@@ -201,21 +201,21 @@ for nt = 1:TOTAL_STEPS
             first_bead_index = SW_IND(j_sw,1);
             X_S(first_bead_index) = 2*X(first_bead_index) - X_T(first_bead_index);
             Y_S(first_bead_index) = 2*Y(first_bead_index) - Y_T(first_bead_index);
-        end    
+        end
         % Having guessed first segment in filament, use robot_arm to guess rest
         [X_S,Y_S] = robot_arm(X_S,Y_S,THETA_S,SW_IND,DL);
 
     end
 
-    % Find f(X_k) and place into ERROR_VECk. 
+    % Find f(X_k) and place into ERROR_VECk.
     % If ||ERROR_VECk|| < concheck_tol (= epsilon in Alg 2, Line 4),
     % then concheck = 0. Else, 1.
     [concheck,ERROR_VECk,VY] = F(X_S,Y_S,TX_S,TY_S,THETA_S,LAMBDA1,LAMBDA2,concheck_tol);
     % (VY only being outputted here for calculating effective drag later.)
-    
+
     % Find approximate Jacobian J_0
-    J0 = approximate_jacobian_implicit_multiswim_reduced_clever(THETA, LAMBDA1, LAMBDA2, drag_coeff, vis_tor_coeff, dt, DL, KBdivDL, SW_IND);
-    
+    J0 = approximate_jacobian(THETA, LAMBDA1, LAMBDA2, drag_coeff, vis_tor_coeff, dt, DL, KBdivDL, SW_IND);
+
     % Find J_0^{-1} f(X_k)  (from Alg 2, Line 5)
     J0invERROR_VECk(idx,:) = blockwise_backslash(J0,ERROR_VECk(idx,:),SW_IND);
 
@@ -236,9 +236,9 @@ for nt = 1:TOTAL_STEPS
         [X_S,Y_S] = robot_arm(X_S,Y_S,THETA_S,SW_IND,DL);
         lambda_locations = 1:2*Np;
         lambda_locations([1:N_w:end]) = [];
-        DeltaX_lambdas = DeltaX(lambda_locations); 
-        LAMBDA1 = LAMBDA1 + DeltaX_lambdas(1:Np-N_sw); 
-        LAMBDA2 = LAMBDA2 + DeltaX_lambdas(Np-N_sw+1:2*Np-2*N_sw);                                                 
+        DeltaX_lambdas = DeltaX(lambda_locations);
+        LAMBDA1 = LAMBDA1 + DeltaX_lambdas(1:Np-N_sw);
+        LAMBDA2 = LAMBDA2 + DeltaX_lambdas(Np-N_sw+1:2*Np-2*N_sw);
 
         % Check to see if the new state is an acceptable solution:
         % ERROR_VECk1 = f(X_(k+1))
@@ -262,7 +262,7 @@ for nt = 1:TOTAL_STEPS
         if iter == 100
             keyboard
             continue
-        end            
+        end
 
         % If the number of iterations maxes out, proceed to next timestep
         % anyway and see what happens (but flag it with a *)
@@ -286,7 +286,7 @@ for nt = 1:TOTAL_STEPS
     TX = cos(THETA);
     TY = sin(THETA);
 
-    % At later time steps, you can use a higher order approximation 
+    % At later time steps, you can use a higher order approximation
     % for the initial guess of the Lagrange multipliers, while storing
     % the required past ones.
     if(nt > 10)
@@ -347,7 +347,7 @@ for nt = 1:TOTAL_STEPS
         clf;
     end
 
-    if(plot_now == plot_step && graphics)    
+    if(plot_now == plot_step && graphics)
         com_X = mean(X_S);
         com_Y = mean(Y_S);
         for i_sw = 1:N_sw
@@ -356,12 +356,12 @@ for nt = 1:TOTAL_STEPS
         end
 
         % Work out quantifiable things about the sedimenting filament
-        A_over_L = (max(Y_S) - min(Y_S))/L;     
+        A_over_L = (max(Y_S) - min(Y_S))/L;
         body_velocity_Y = mean(VY);
         eff_drag_coeff = -weight_per_unit_length*L/body_velocity_Y;
         title(['nt='  num2str(nt)  ', dt='  num2str(dt) ...
                ', B='  num2str(B)  ', N_{sw}='  num2str(N_sw) ...
-               ', A/L=' num2str(A_over_L) ... 
+               ', A/L=' num2str(A_over_L) ...
                ', \gamma=' num2str(eff_drag_coeff) ''])
 
         hold off
@@ -378,7 +378,7 @@ for nt = 1:TOTAL_STEPS
             framecount=framecount+1;
         end
         pause(0.01);
-    end     
+    end
 
     if plot_now == plot_step
         plot_now = 0;
@@ -393,7 +393,7 @@ for nt = 1:TOTAL_STEPS
     fprintf(['[' format_time(frame_time(nt)) '|' ...
             format_time(mean(frame_time(1:nt))*(TOTAL_STEPS-nt)) ...
             '-][#Broy steps: '  num2str(num_broydens_steps_required) ...
-            '|Avg: '  num2str(round(running_total_count/nt,1))  ']']) 
+            '|Avg: '  num2str(round(running_total_count/nt))  ']'])
 
 end
 
@@ -404,8 +404,8 @@ disp(['Total time:' format_time(sum(frame_time))])
 if video
     close(Filament_movie);
 end
-            
-    
+
+
 function [concheck_local,ERROR_VECk1_local,VY] = F(X_S, Y_S, TX_S, TY_S,...
                                                    THETA_S, LAMBDA1,...
                                                    LAMBDA2, tol)
@@ -413,29 +413,29 @@ function [concheck_local,ERROR_VECk1_local,VY] = F(X_S, Y_S, TX_S, TY_S,...
 %    velocities and angular velocities, and forms the error vector f(X*).
 %    Then checks convergence. For details, see docstrings of functions
 %    within.
-    
+
     FX = zeros(Np,1);
     FY = zeros(Np,1);
     TAUZ = zeros(Np,1);
-    
-    FY = -weight_per_unit_length*L/N_w*ones(Np,1); % Gravity 
-    
+
+    FY = -weight_per_unit_length*L/N_w*ones(Np,1); % Gravity
+
     [TAUZ] = elastic_torques(TAUZ, TX_S, TY_S, KB, SW_IND, DL_SW);
-    
+
     [FX, FY] = collision_barrier(X_S, Y_S, FX, FY, ...
                                  Lx_collision, Ly_collision, PtoS, ...
                                  map, head, list, RAD);
-    
+
     [FX, FY, TAUZ] = constraint_forces_torques(FX, FY, TAUZ, TX_S, TY_S,...
                                          LAMBDA1, LAMBDA2, SW_IND, DL_SW);
-        
+
     FZ = zeros(Np,1);
-    TAUX = zeros(Np,1);    
-    TAUY = zeros(Np,1);    
+    TAUX = zeros(Np,1);
+    TAUY = zeros(Np,1);
     Z = zeros(Np,1);
     [VX,VY,~,~,~,OMEGZ] = RPY(FX,FY,FZ,TAUX,TAUY,TAUZ,X,Y,Z,a,1);
-    
-        
+
+
     % Check convergence between x_(n+1) and x_n, and also check the
     % constraint. concheck = 0 if all fine, 1 otherwise. The error vectors
     % are all compiled into ERROR_VECk1_local.
@@ -444,7 +444,7 @@ function [concheck_local,ERROR_VECk1_local,VY] = F(X_S, Y_S, TX_S, TY_S,...
                                               X, Y, THETA, ...
                                               X_T, Y_T, THETA_T, ...
                                               VX, VY, OMEGZ, ...
-                                              DL, dt, nt, SW_IND, tol);                                                      
-end         
+                                              DL, dt, nt, SW_IND, tol);
+end
 
 end
