@@ -1,6 +1,6 @@
 # 2D Matlab RPY code: README
 
-Supplementary code to [arXiv address here] by [Author names].
+Supplementary Matlab/Octave code to [arXiv address here] by [Author names].
 
 ## 1. Whom do I talk to?
 * Contact details
