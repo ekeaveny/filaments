@@ -1,7 +1,9 @@
 function main()
-% MAIN  Supplementary code to [arXiv address here]
-%       by [Author names].
-%       Visit [GitHub address] to find contact details.
+% MAIN  Supplementary code to 'Methods for suspensions of passive and
+%       active filaments', https://arxiv.org/abs/1903.12609 ,
+%       by SF Schoeller, AK Townsend, TA Westwood & EE Keaveny.
+%       Visit https://github.com/ekeaveny/filaments/ to find contact 
+%       details.
 %       This version: March 2019
 %
 %   This code demonstrates the use of the method in simulating a
