@@ -224,7 +224,7 @@ for nt = 1:TOTAL_STEPS
     num_broydens_steps_required = 0;
     while(concheck == 1) % Alg 2, Line 4
         % Alg 2, Line 5. DeltaX is Delta X in paper.
-        DeltaX = -H_mat_multiply(J0invERROR_VECk, Dmat, Cmat, ERROR_VECk, iter+1);
+        DeltaX = -H_mat_multiply(J0invERROR_VECk, Cmat, Dmat, ERROR_VECk, iter+1);
 
         % Update the positions and lambdas
         THETA_S = THETA_S + DeltaX(2*Np + 1:3*Np);
@@ -253,10 +253,9 @@ for nt = 1:TOTAL_STEPS
 
         J0invERROR_VECk1(idx,:) = blockwise_backslash(J0,ERROR_VECk1(idx,:),SW_IND);
 
-        Htimesf = H_mat_multiply(J0invERROR_VECk1, Dmat, Cmat, ERROR_VECk1, iter);
         y_vec_sq = y_vec'*y_vec;
-        Dmat(:,iter) = Htimesf;
-        Cmat(:,iter) = y_vec/y_vec_sq;
+        Cmat(:,iter) = -H_mat_multiply(J0invERROR_VECk1, Cmat, Dmat, ERROR_VECk1, iter);
+        Dmat(:,iter) = y_vec/y_vec_sq;
         ERROR_VECk = ERROR_VECk1;
         J0invERROR_VECk = J0invERROR_VECk1;
 
