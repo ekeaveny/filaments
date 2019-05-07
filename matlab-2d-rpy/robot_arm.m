@@ -1,14 +1,15 @@
 function [X_S,Y_S] = robot_arm(X_S,Y_S,THETA_S,SW_IND,DL)
 % ROBOT_ARM  Starting at [X_S(1),Y_S(1)], construct a beam like a robot 
-%            arm, by adding a bead at DL*[TX_S,TY_S] away, and continuing 
-%            like this.
+%            arm, by adding a segment a distance DL away, with the angle 
+%            dictated as the average of the two segments' tangents. The 
+%            process is repeated like this.
 %
 %   [X_S,Y_S] = robot_arm(X_S,Y_S,THETA_S,SW_IND,DL)
 %
-%   The tangent vector [TX_S,TY_S] is generated from THETA_S. Which bead
-%   is in which worm is conveyed through SW_IND.
+%   The tangent vector [TX_S,TY_S] is generated from THETA_S. Which segment
+%   is in which filament is conveyed through SW_IND.
 % 
-%   You should specify [X_S(1),Y_S(1)] for each worm before calling
+%   You should specify [X_S(1),Y_S(1)] for each filament before calling
 %   this function.
 
 N_sw = size(SW_IND,1);

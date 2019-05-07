@@ -42,8 +42,13 @@ for i_sw = 1:N_sw
     num_filament_types = size(KB_div_DL_array,2);
     k_index = floor((i_sw-1)/N_sw*num_filament_types) + 1;
     KB_div_DL = KB_div_DL_array(k_index);
+    
+    % Note order of the Jacobian produced is particle-sized
+    %                                        [11 13 12
+    %                                         31 33 32
+    %                                         21 23 22]
 
-    % [df1/dY1 = J11]
+    % [df1/dY1 = J11 and df3/dY1 = J31]
     for i_w = 1:N_w
         J = 3*(i_w-1)+1;                  % = j mod N_w
         k = 3*((i_sw-1)*N_w+  1-1)+1;
@@ -51,7 +56,7 @@ for i_sw = 1:N_sw
         J0(J+1,k+1) = 1;               % 1s for Ys
     end
 
-    % [df1/dlambda = J13]
+    % [df1/dlambda = J13 and df3/dlambda = J33]
     for i_w = 1:N_w-1
         j = 3*((i_sw-1)*N_w+i_w-1)+1;
         J = 3*(i_w-1)+1;                  % = j mod N_w

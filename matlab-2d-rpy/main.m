@@ -4,7 +4,7 @@ function main()
 %       by SF Schoeller, AK Townsend, TA Westwood & EE Keaveny.
 %       Visit https://github.com/ekeaveny/filaments/ to find contact 
 %       details.
-%       This version: March 2019
+%       This version: 7 May 2019
 %
 %   This code demonstrates the use of the method in simulating a
 %   single flexible filament falling under gravity.
@@ -37,13 +37,13 @@ steps_per_unit_time = 30;     % for sedimenting, unit time T = L^2 mu / F
 num_settling_times = 2;       % number of settling (unit) times
 concheck_tol = 1e-4;          % Broyden's tolerance
 
-DL = 2.2*a;                   % distance between segment centres, Delta L
+DL_factor = 2.2;
+DL = DL_factor*a;             % distance between segment centres, Delta L
 L = N_w*DL;                   % filament length L
 mu = 1;                       % fluid viscosity
 
 KB = weight_per_unit_length*L^3/B;         % bending modulus, K_B
 KBdivDL = KB/DL;
-unit_time = L*mu/weight_per_unit_length;   % 1 settling time, T
 
 filename = ['out-'  datestr(now,'yyyymmdd-HHMMSS') '-Nsw' num2str(N_sw) ...
             '-Nw' num2str(N_w) '-B' num2str(B) '-RPY']; % used for data
@@ -71,14 +71,8 @@ THETA_S = zeros(Np,1);
 % Arrays storing which filament each segment belongs to
 SW_IND = reshape([1:Np],N_w,N_sw)';
 
-% Distances between segments
-DL_SW = zeros(N_sw, N_w - 1);
-for i_sw = 1:N_sw
-    DL_SW(i_sw,1) = DL;
-    for j = 2:N_w-1
-        DL_SW(i_sw,j) = DL;
-    end
-end
+% Distances between segments (all separations set to DL)
+DL_SW = ones(N_sw, N_w - 1)*DL;
 
 % Which filament does segment belong to?
 % PtoS(n) returns the index of the filament that segment n belongs to.
@@ -123,14 +117,6 @@ LAMBDA2 = zeros(N_lam,1);
 LAMBDA1_0 = zeros(N_lam,1);
 LAMBDA2_0 = zeros(N_lam,1);
 
-% Time
-TOTAL_STEPS = num_settling_times*steps_per_unit_time;
-dt = unit_time/steps_per_unit_time;
-
-t = 0;
-plot_now = plot_step - 1;
-save_now = save_step - 1;
-
 % Segment size-related stuff
 drag_coeff = (6*pi*a);
 vis_tor_coeff = 8*pi*a^3;
@@ -138,6 +124,14 @@ RAD = a*ones(Np,1);         % Segment size vector (a = filament thickness)
 
 % Newton step Delta X where at iteration k, X_(k+1) = X_k + Delta X
 DeltaX = zeros(3*Np,1);
+
+% Time
+unit_time = L*mu/weight_per_unit_length;   % 1 settling time, T
+TOTAL_STEPS = num_settling_times*steps_per_unit_time;
+dt = unit_time/steps_per_unit_time;
+t = 0;
+plot_now = plot_step - 1;
+save_now = save_step - 1;   
 
 % Time and iteration counts
 frame_time = zeros(TOTAL_STEPS,1);
@@ -200,11 +194,12 @@ for nt = 1:TOTAL_STEPS
         TX_S = cos(THETA_S);
         TY_S = sin(THETA_S);
         for j_sw = 1:N_sw
-            first_bead_index = SW_IND(j_sw,1);
-            X_S(first_bead_index) = 2*X(first_bead_index) - X_T(first_bead_index);
-            Y_S(first_bead_index) = 2*Y(first_bead_index) - Y_T(first_bead_index);
+            first_bead = SW_IND(j_sw,1);
+            X_S(first_bead) = 2*X(first_bead) - X_T(first_bead);
+            Y_S(first_bead) = 2*Y(first_bead) - Y_T(first_bead);
         end
-        % Having guessed first segment in filament, use robot_arm to guess rest
+        % Having guessed first segment in filament, use robot_arm to 
+        % guess rest
         [X_S,Y_S] = robot_arm(X_S,Y_S,THETA_S,SW_IND,DL);
 
     end
@@ -212,28 +207,33 @@ for nt = 1:TOTAL_STEPS
     % Find f(X_k) and place into ERROR_VECk.
     % If ||ERROR_VECk|| < concheck_tol (= epsilon in Alg 2, Line 4),
     % then concheck = 0. Else, 1.
-    [concheck,ERROR_VECk,VY] = F(X_S,Y_S,TX_S,TY_S,THETA_S,LAMBDA1,LAMBDA2,concheck_tol);
+    [concheck,ERROR_VECk,VY] = F(X_S,Y_S,TX_S,TY_S,THETA_S, ...
+                                             LAMBDA1,LAMBDA2,concheck_tol);
     % (VY only being outputted here for calculating effective drag later.)
 
     % Find approximate Jacobian J_0
-    J0 = approximate_jacobian(THETA, LAMBDA1, LAMBDA2, drag_coeff, vis_tor_coeff, dt, DL, KBdivDL, SW_IND);
+    J0 = approximate_jacobian(THETA, LAMBDA1, LAMBDA2, ...
+                              drag_coeff, vis_tor_coeff, dt, ...
+                              DL, KBdivDL, SW_IND);
 
     % Find J_0^{-1} f(X_k)  (from Alg 2, Line 5)
-    J0invERROR_VECk(idx,:) = blockwise_backslash(J0,ERROR_VECk(idx,:),SW_IND);
+    J0invERROR_VECk(idx,:) = blockwise_backslash(J0, ...
+                                                 ERROR_VECk(idx,:),SW_IND);
 
     num_broydens_steps_required = 0;
     while(concheck == 1) % Alg 2, Line 4
         % Alg 2, Line 5. DeltaX is Delta X in paper.
-        DeltaX = -H_mat_multiply(J0invERROR_VECk, Cmat, Dmat, ERROR_VECk, iter+1);
+        DeltaX = -apply_inverse_jacobian(J0invERROR_VECk, Cmat, Dmat, ...
+                                                       ERROR_VECk, iter+1);
 
         % Update the positions and lambdas
         THETA_S = THETA_S + DeltaX(2*Np + 1:3*Np);
         TX_S = cos(THETA_S);
         TY_S = sin(THETA_S);
         for j_sw = 1:N_sw
-            first_bead_index = SW_IND(j_sw,1);
-            X_S(first_bead_index) = X_S(first_bead_index) + DeltaX(first_bead_index);
-            Y_S(first_bead_index) = Y_S(first_bead_index) + DeltaX(Np + first_bead_index);
+            first_bead = SW_IND(j_sw,1);
+            X_S(first_bead) = X_S(first_bead) + DeltaX(first_bead);
+            Y_S(first_bead) = Y_S(first_bead) + DeltaX(Np + first_bead);
         end
         [X_S,Y_S] = robot_arm(X_S,Y_S,THETA_S,SW_IND,DL);
         lambda_locations = 1:2*Np;
@@ -244,17 +244,20 @@ for nt = 1:TOTAL_STEPS
 
         % Check to see if the new state is an acceptable solution:
         % ERROR_VECk1 = f(X_(k+1))
-        [concheck, ERROR_VECk1,VY] = F(X_S,Y_S,TX_S,TY_S,THETA_S,LAMBDA1,LAMBDA2,concheck_tol);
+        [concheck, ERROR_VECk1,VY] = F(X_S,Y_S,TX_S,TY_S,THETA_S, ...
+                                             LAMBDA1,LAMBDA2,concheck_tol);
 
         iter = iter + 1;
 
         % (remaining lines are Alg 2, Line 7)
         y_vec = ERROR_VECk1 - ERROR_VECk;
 
-        J0invERROR_VECk1(idx,:) = blockwise_backslash(J0,ERROR_VECk1(idx,:),SW_IND);
+        J0invERROR_VECk1(idx,:) = blockwise_backslash(J0, ...
+                                                ERROR_VECk1(idx,:),SW_IND);
 
         y_vec_sq = y_vec'*y_vec;
-        Cmat(:,iter) = -H_mat_multiply(J0invERROR_VECk1, Cmat, Dmat, ERROR_VECk1, iter);
+        Cmat(:,iter) = -apply_inverse_jacobian(J0invERROR_VECk1, ...
+                                            Cmat, Dmat, ERROR_VECk1, iter);
         Dmat(:,iter) = y_vec/y_vec_sq;
         ERROR_VECk = ERROR_VECk1;
         J0invERROR_VECk = J0invERROR_VECk1;
