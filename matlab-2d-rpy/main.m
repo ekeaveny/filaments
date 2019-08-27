@@ -2,7 +2,7 @@ function main()
 % MAIN  Supplementary code to 'Methods for suspensions of passive and
 %       active filaments', https://arxiv.org/abs/1903.12609 ,
 %       by SF Schoeller, AK Townsend, TA Westwood & EE Keaveny.
-%       Visit https://github.com/ekeaveny/filaments/ to find contact 
+%       Visit https://github.com/ekeaveny/filaments/ to find contact
 %       details.
 %       This version: 7 May 2019
 %
@@ -131,7 +131,7 @@ TOTAL_STEPS = num_settling_times*steps_per_unit_time;
 dt = unit_time/steps_per_unit_time;
 t = 0;
 plot_now = plot_step - 1;
-save_now = save_step - 1;   
+save_now = save_step - 1;
 
 % Time and iteration counts
 frame_time = zeros(TOTAL_STEPS,1);
@@ -198,7 +198,7 @@ for nt = 1:TOTAL_STEPS
             X_S(first_bead) = 2*X(first_bead) - X_T(first_bead);
             Y_S(first_bead) = 2*Y(first_bead) - Y_T(first_bead);
         end
-        % Having guessed first segment in filament, use robot_arm to 
+        % Having guessed first segment in filament, use robot_arm to
         % guess rest
         [X_S,Y_S] = robot_arm(X_S,Y_S,THETA_S,SW_IND,DL);
 
@@ -436,8 +436,8 @@ function [concheck_local,ERROR_VECk1_local,VY] = F(X_S, Y_S, TX_S, TY_S,...
     FZ = zeros(Np,1);
     TAUX = zeros(Np,1);
     TAUY = zeros(Np,1);
-    Z = zeros(Np,1);
-    [VX,VY,~,~,~,OMEGZ] = RPY(FX,FY,FZ,TAUX,TAUY,TAUZ,X,Y,Z,a,1);
+    Z_S = zeros(Np,1);
+    [VX,VY,~,~,~,OMEGZ] = RPY(FX,FY,FZ,TAUX,TAUY,TAUZ,X_S,Y_S,Z_S,a,1);
 
 
     % Check convergence between x_(n+1) and x_n, and also check the
