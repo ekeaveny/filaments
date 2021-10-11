@@ -13,3 +13,6 @@ The authors can be contacted at:
 ## 2. What code is here?
 1. [`/matlab-2d-rpy/`](https://github.com/ekeaveny/filaments/tree/master/matlab-2d-rpy) A 2D Matlab/Octave code which uses the method described in [the paper](https://arxiv.org/abs/1903.12609) to simulate a single flexible filament falling under gravity in an unbounded domain.
 2. [`/matlab-3d-rpy/`](https://github.com/ekeaveny/filaments/tree/master/matlab-3d-rpy) A 3D Matlab/Octave code which does the same, using quaternions and geometric time integration as described in [the paper](https://arxiv.org/abs/1903.12609) to handle the 3D motion.
+
+## Acknowledgements:
+11-OCT-2021: We thank Robert (Bob) Swallow of Trinity University for alerting us to errors in the approximate Jacobian.
