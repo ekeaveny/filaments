@@ -38,42 +38,31 @@ ERROR_VEC = zeros(Np,1);
 
 for n=1:N_sw
     
-    DL = Filaments(n).DL;
     V = Filaments(n).V;
     
     X   = Filaments(n).X;   % Positions of filament segments at next t'step
     Xm1 = Filaments(n).Xm1; % ... at current timestep
     Xm2 = Filaments(n).Xm2; % ... at previous timestep
     
-    X1 = Filaments(n).X1;   % Position of the first segment at the 
-                            % current and previous time-step.
-    
-    Q = Filaments(n).Q;     % Orientation quaternions for segments in fil.
     U = Filaments(n).U;     % Lie algebra elements associated with the 
                             % orientation of the constituent particles.
-       
-    Xcurrent = X(:,1);
     
     if(nt == 1) % Euler   
         for j_w = 1:Filaments(n).N_w % segment number
-            if (j_w == 1)
-                ERROR1 = X(:,1) - X1(1:3) - dt*V(1:3,1);
-            else
-                for pid=[j_w-1,j_w]
-                    ttmp1 = QuaternionRotation(Q(pid,1:4),[1;0;0]);
-                    Xcurrent = Xcurrent + DL/2*ttmp1;
-                end
-                ERROR1 = X(:,j_w) - Xm1(:,j_w) - dt*V(1:3,j_w);
-            end
+            
+            ERROR1 = X(:,j_w) - Xm1(:,j_w) - dt*V(1:3,j_w);
+            
             ERROR3 = U(1:3,j_w) - dt*dexpinv(U(1:3,j_w),V(4:6,j_w));
 
-            loc = N(n) + 3*(j_w-1);
-            ERROR_VEC(loc+1) = ERROR1(1);
-            ERROR_VEC(loc+2) = ERROR1(2);
-            ERROR_VEC(loc+3) = ERROR1(3);
-            ERROR_VEC(loc+1+3*Filaments(n).N_w) = ERROR3(1);
-            ERROR_VEC(loc+2+3*Filaments(n).N_w) = ERROR3(2);
-            ERROR_VEC(loc+3+3*Filaments(n).N_w) = ERROR3(3);
+            loc1 = N(n) + 3*(j_w - 1 + (j_w ~= 1)*Filaments(n).N_w);
+            ERROR_VEC(loc1+1) = ERROR1(1);
+            ERROR_VEC(loc1+2) = ERROR1(2);
+            ERROR_VEC(loc1+3) = ERROR1(3);
+            
+            loc3 = N(n) + 3*j_w;
+            ERROR_VEC(loc3+1) = ERROR3(1);
+            ERROR_VEC(loc3+2) = ERROR3(2);
+            ERROR_VEC(loc3+3) = ERROR3(3);
 
             if(max(abs(ERROR1)) > tol || max(abs(ERROR3)) > tol)
                 concheck = 1;
@@ -82,27 +71,22 @@ for n=1:N_sw
         
     else %% BDF2
         for j_w = 1:Filaments(n).N_w
-            if (j_w == 1)
-                ERROR1 = X(:,1) - c_1*X1(1:3) ...
-                         + c_2*X1(4:6) - dt*c_4*V(1:3,1);
-            else
-                for pid=[j_w-1,j_w]
-                    ttmp1 = QuaternionRotation(Q(pid,1:4),[1;0;0]);
-                    Xcurrent = Xcurrent + DL/2*ttmp1;
-                end
-                  ERROR1 = X(:,j_w) - (4/3)*Xm1(:,j_w) ...
-                           + (1/3)*Xm2(:,j_w) - 2*(dt/3.)*V(1:3,j_w);
-            end
-            ERROR3 = U(1:3,j_w) - (1/3)*U(4:6,j_w) ...
+            
+            ERROR1 = X(:,j_w) - c_1*Xm1(:,j_w) ...
+                           + c_2*Xm2(:,j_w) - dt*c_4*V(1:3,j_w);
+                       
+            ERROR3 = U(1:3,j_w) - c_2*U(4:6,j_w) ...
                      - c_4*dt*dexpinv(U(1:3,j_w),V(4:6,j_w));
             
-            loc = N(n) + 3*(j_w-1);
-            ERROR_VEC(loc+1) = ERROR1(1);
-            ERROR_VEC(loc+2) = ERROR1(2);
-            ERROR_VEC(loc+3) = ERROR1(3);
-            ERROR_VEC(loc+1+3*Filaments(n).N_w) = ERROR3(1);
-            ERROR_VEC(loc+2+3*Filaments(n).N_w) = ERROR3(2);
-            ERROR_VEC(loc+3+3*Filaments(n).N_w) = ERROR3(3);
+            loc1 = N(n) + 3*(j_w - 1 + (j_w ~= 1)*Filaments(n).N_w);
+            ERROR_VEC(loc1+1) = ERROR1(1);
+            ERROR_VEC(loc1+2) = ERROR1(2);
+            ERROR_VEC(loc1+3) = ERROR1(3);
+            
+            loc3 = N(n) + 3*j_w;
+            ERROR_VEC(loc3+1) = ERROR3(1);
+            ERROR_VEC(loc3+2) = ERROR3(2);
+            ERROR_VEC(loc3+3) = ERROR3(3);
 
             if(max(abs(ERROR1)) > tol || max(abs(ERROR3)) > tol)
                 concheck = 1;
