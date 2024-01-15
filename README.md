@@ -6,7 +6,7 @@ Supplementary Matlab/Octave code to ['Methods for suspensions of passive and act
 The authors can be contacted at:
 
 * Simon Schoeller: `simon.schoeller14@imperial.ac.uk`
-* Adam Townsend: `adam.townsend@imperial.ac.uk`
+* Adam Townsend: `adam.k.townsend@durham.ac.uk`
 * Tim Westwood: `t.westwood16@imperial.ac.uk`
 * Eric Keaveny: `e.keaveny@imperial.ac.uk`
 
